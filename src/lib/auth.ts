@@ -22,13 +22,26 @@ export function getDb() {
 function createAuthInstance() {
   const client = getMongoClient();
   const db = client.db("booklibrary");
+  const googleClientId = process.env.GOOGLE_CLIENT_ID;
+  const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
+  const appleClientId = process.env.APPLE_CLIENT_ID;
+  const appleClientSecret = process.env.APPLE_CLIENT_SECRET;
 
   return betterAuth({
+    baseURL: process.env.BETTER_AUTH_URL,
     database: mongodbAdapter(db, {
       client,
     }),
     emailAndPassword: {
       enabled: true,
+    },
+    socialProviders: {
+      ...(googleClientId && googleClientSecret
+        ? { google: { clientId: googleClientId, clientSecret: googleClientSecret } }
+        : {}),
+      ...(appleClientId && appleClientSecret
+        ? { apple: { clientId: appleClientId, clientSecret: appleClientSecret } }
+        : {}),
     },
     plugins: [
       // JWT plugin — signs short-lived access tokens for the Express backend.
