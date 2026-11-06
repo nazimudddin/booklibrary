@@ -1,4 +1,4 @@
-import { auth, db } from "@/lib/auth";
+import { getAuth, getDb } from "@/lib/auth";
 
 /**
  * POST /api/books
@@ -6,7 +6,7 @@ import { auth, db } from "@/lib/auth";
  */
 export async function POST(request: Request) {
   try {
-    const session = await auth.api.getSession({ headers: request.headers });
+    const session = await getAuth().api.getSession({ headers: request.headers });
     if (!session) {
       return Response.json({ error: "Please log in to add a book." }, { status: 401 });
     }
@@ -61,7 +61,7 @@ export async function POST(request: Request) {
     }
 
     /* ------------------------------- Persist ------------------------------- */
-    const result = await db.collection("books").insertOne({
+    const result = await getDb().collection("books").insertOne({
       title: String(title).trim(),
       author: String(author).trim(),
       category: String(category).trim(),

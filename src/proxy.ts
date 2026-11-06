@@ -1,12 +1,12 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { auth } from "@/lib/auth";
+import { getAuth } from "@/lib/auth";
 
 const backendUrl = process.env.BACKEND_URL!;
 
 export async function proxy(request: NextRequest) {
   if (request.nextUrl.pathname.startsWith("/api/backend/")) {
     try {
-      const { token } = await auth.api.getToken({ headers: request.headers });
+      const { token } = await getAuth().api.getToken({ headers: request.headers });
       if (!token) {
         return NextResponse.json({ error: "Please log in first." }, { status: 401 });
       }
@@ -27,7 +27,7 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  const session = await auth.api.getSession({ headers: request.headers });
+  const session = await getAuth().api.getSession({ headers: request.headers });
 
   if (!session) {
     const signInUrl = new URL("/signin", request.url);
