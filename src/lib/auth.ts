@@ -6,6 +6,23 @@ import { MongoClient } from "mongodb";
 let client: MongoClient | undefined;
 let authInstance: ReturnType<typeof createAuthInstance> | undefined;
 
+function getAuthBaseURL() {
+  const configuredURL = process.env.BETTER_AUTH_URL;
+  if (process.env.VERCEL === "1") {
+    const vercelHost =
+      process.env.VERCEL_ENV === "production"
+        ? process.env.VERCEL_PROJECT_PRODUCTION_URL
+        : process.env.VERCEL_URL;
+    const configuredIsLocalhost =
+      configuredURL && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/i.test(configuredURL);
+    const baseURL = configuredIsLocalhost
+      ? undefined
+      : configuredURL || (vercelHost ? `https://${vercelHost}` : undefined);
+    return baseURL?.replace(/^http:\/\//i, "https://");
+  }
+  return configuredURL;
+}
+
 function getMongoClient() {
   if (!client) {
     const uri = process.env.MONGODB_URI;
@@ -26,9 +43,10 @@ function createAuthInstance() {
   const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
   const appleClientId = process.env.APPLE_CLIENT_ID;
   const appleClientSecret = process.env.APPLE_CLIENT_SECRET;
+  const baseURL = getAuthBaseURL();
 
   return betterAuth({
-    baseURL: process.env.BETTER_AUTH_URL,
+    baseURL,
     database: mongodbAdapter(db, {
       client,
     }),
@@ -52,7 +70,7 @@ function createAuthInstance() {
         jwt: {
           // Both values are checked again by the Express backend when it
           // verifies each Bearer token.
-          issuer: process.env.BETTER_AUTH_URL!,
+          issuer: baseURL!,
           audience: process.env.BACKEND_URL!,
           // One hour per token — /api/auth/token mints a fresh one quietly
           // while the user is signed in.
