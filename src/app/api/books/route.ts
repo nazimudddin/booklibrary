@@ -1,4 +1,18 @@
 import { getAuth, getDb } from "@/lib/auth";
+import { fetchPublicBooks } from "@/lib/public-books";
+
+/**
+ * GET /api/books
+ * Public catalog read used by visitors who are not signed in.
+ */
+export async function GET() {
+  try {
+    return Response.json(await fetchPublicBooks());
+  } catch (error) {
+    console.error("Failed to load public books:", error);
+    return Response.json({ error: "Unable to load books." }, { status: 502 });
+  }
+}
 
 /**
  * POST /api/books

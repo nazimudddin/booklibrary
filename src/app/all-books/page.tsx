@@ -1,7 +1,9 @@
 import React, { Suspense } from "react";
+import { connection } from "next/server";
 import BooksShowcase from "./BooksShowcase";
 import { BooksSkeleton } from "./BooksShowcase";
 import type { Book } from "@/lib/types";
+import { fetchPublicBooks } from "@/lib/public-books";
 
 export const instant = false;
 
@@ -24,20 +26,15 @@ const AllBooksPage = async () => {
 
 /** Keeps the original fetch logic, but survives an unreachable API. */
 async function BooksLoader() {
+  // Render the public collection for each request. No session is read here.
+  await connection();
+
   let books: Book[] = [];
 
   try {
-    const response = await fetch(`${process.env.BACKEND_URL}/all-books`, {
-      cache: "no-store",
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      if (Array.isArray(data)) {
-        books = data as Book[];
-      }
-    }
-  } catch {
+    books = await fetchPublicBooks();
+  } catch (error) {
+    console.error("Failed to load All Books:", error);
     books = []; // server unreachable → the showcase shows its empty state
   }
 

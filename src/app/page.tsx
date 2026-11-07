@@ -6,15 +6,17 @@ import NewArrivelsPage, {
 } from "@/components/compo/NewArrivels";
 import HowBorrowingWorks from "@/components/compo/HowBorrowingWorks";
 import ReaderReviews from "@/components/compo/ReaderReviews";
+import { fetchNewArrivals } from "@/lib/public-books";
 
 /**
  * Home — hero section + dynamic New Arrivals + two static sections.
  *
  * The book data is fetched directly HERE in the page file (no separate
  * component/hook/service) from the existing API:
- *   GET ${process.env.BACKEND_URL}/all-books
- * The backend already sorts by `createdAt: -1` (newest first), so the
- * page takes the first 6 books and hands them to the section. The fetch
+ *   GET ${process.env.BACKEND_URL}/new-arrivals
+ * The backend sorts by `createdAt: -1` and limits the response to six, so
+ * the page receives exactly the newest books without client-side trimming.
+ * The fetch
  * streams in behind a Suspense skeleton so the hero shows instantly.
  *
  * "How Borrowing Works" and "Reader Reviews" are static sections
@@ -36,25 +38,17 @@ export default function Home() {
   );
 }
 
-/** Fetches from the existing API and picks the latest 6 books. */
+/** Fetches the latest six books from the public API. */
 async function NewArrivalsLoader() {
   await connection();
 
   let books: ArrivalBook[] = [];
 
   try {
-    const response = await fetch(`${process.env.BACKEND_URL}/all-books`, {
-      cache: "no-store",
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      if (Array.isArray(data)) {
-        // Backend returns books sorted newest first — take the latest 6.
-        books = data.slice(0, 6);
-      }
-    }
-  } catch {
+    // This endpoint never reads a session; MongoDB sorts and limits the data.
+    books = (await fetchNewArrivals()) as ArrivalBook[];
+  } catch (error) {
+    console.error("Failed to load New Arrivals:", error);
     books = []; // API unreachable → the section shows its empty state
   }
 
