@@ -72,7 +72,11 @@ export const config = {
     "/profile/:path*",
     "/my-books/:path*",
     "/my-borrows/:path*",
-    "/add-book/:path*",
+    // /add-book is session-gated client-side with the same Better Auth session
+    // state the Navbar uses (useSession + isPending), so a signed-in user is
+    // always shown the form directly instead of being redirected to /signin by
+    // a server-side check. Authentication is still enforced server-side for the
+    // submission itself through the /api/backend token gate.
     "/api/backend/:path*",
   ],
 };

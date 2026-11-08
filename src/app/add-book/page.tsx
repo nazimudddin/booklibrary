@@ -13,6 +13,7 @@
  */
 
 import { useState } from "react";
+import Link from "next/link";
 import { useSession } from "@/lib/auth-client";
 
 import {
@@ -29,6 +30,7 @@ import {
   Plus,
   CircleCheck,
   TriangleAlert,
+  ArrowLeft,
   LoaderCircle,
 } from "lucide-react";
 
@@ -96,7 +98,7 @@ function FieldLabel({
 /* -------------------------------------------------------------------------- */
 
 export default function AddBookPage() {
-  const { data: session } = useSession();
+  const { data: session, isPending } = useSession();
 
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("");
@@ -177,6 +179,49 @@ export default function AddBookPage() {
       setIsLoading(false);
     }
   };
+
+  /* ------------------------------ Signed out ------------------------------ */
+
+  /* While the session is still loading we don't decide yet — same call as the
+     Navbar: never render a login prompt before `useSession` has resolved,
+     otherwise a logged-in user sees a prompt flash. */
+
+  if (isPending) {
+    return (
+      <div className="flex min-h-svh items-center justify-center px-4">
+        <p className="text-sm text-muted-foreground">Loading...</p>
+      </div>
+    );
+  }
+
+  if (!session) {
+    return (
+      <section className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-4 py-16">
+        <div
+          className="hero-in flex flex-col items-center gap-5 rounded-3xl border-2 border-dashed border-amber-200 bg-amber-50/60 p-10 text-center backdrop-blur-md sm:p-14"
+          style={{ animationDelay: "0ms" }}
+        >
+          <span className="flex size-16 items-center justify-center rounded-full border border-amber-200 bg-white text-amber-500 shadow-lg shadow-amber-400/20">
+            <BookOpen className="size-7" aria-hidden />
+          </span>
+          <h1 className="text-xl font-bold text-slate-900 sm:text-2xl">
+            Log in to add a book
+          </h1>
+          <p className="max-w-sm text-sm leading-relaxed text-slate-500">
+            Sharing a book with the community takes a minute — sign in and the
+            Add Book form will be waiting for you.
+          </p>
+          <Link
+            href="/signin"
+            className="inline-flex items-center gap-2 rounded-xl bg-neutral-900 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-slate-950/20 ring-1 ring-white/10 transition-all duration-200 hover:-translate-y-0.5 hover:bg-neutral-800"
+          >
+            <ArrowLeft className="size-4" aria-hidden />
+            Go to Login
+          </Link>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-4 py-12 sm:px-6">
