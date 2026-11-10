@@ -49,12 +49,22 @@ export default function LoginForm({}: React.ComponentProps<"div">) {
             email:user.email as string,
             password:user.password as string
         })
-        if(data){
+        // Only navigate when the session was really created — better-auth may
+        // still return partial `data` alongside an error (e.g. user exists but
+        // the password was rejected), which must not be treated as success.
+        if(data?.user && !error){
             console.log("user logged in",data);
             router.push("/");
         }
+        // Surface the failure in the page (the same state the Google button
+        // uses) — previously this only console.error'd and the visitor saw
+        // no feedback at all.
         if(error){
-            console.error("login error",error)
+            const message = error.message ?? "Login failed. Please check your email and password.";
+            setAuthError(message);
+            // better-auth error objects carry their fields non-enumerably, so
+            // `console.error(error)` collapses to {}. Log the fields directly.
+            console.error("login error:", error.status ?? error.code ?? error);
         }
     }
   return (
